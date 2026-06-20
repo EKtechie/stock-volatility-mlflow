@@ -1,0 +1,23 @@
+# Virtual environment
+Lib/
+Scripts/
+include/
+etc/
+share/
+pyvenv.cfg
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# MLflow
+mlruns/
+mlflow.db
+
+# IDE
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
