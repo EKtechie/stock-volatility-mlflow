@@ -1,6 +1,6 @@
 # Stock Volatility Forecasting Pipeline
 
-A regression pipeline that forecasts 5-day forward annualised stock volatility using live market data, 50+ engineered features, and a benchmarked comparison of 10 models — fully tracked with MLflow, including experiment logging, hyperparameter tuning, and model registry.
+A regression pipeline that forecasts 5-day forward annualised stock volatility using live market data, 50+ engineered features, and a benchmarked comparison of 10 models fully tracked with MLflow, including experiment logging, hyperparameter tuning, and model registry.
 
 No static CSV files. All data is pulled live from Yahoo Finance at runtime.
 
@@ -8,7 +8,7 @@ No static CSV files. All data is pulled live from Yahoo Finance at runtime.
 
 ## Why volatility, not price
 
-Predicting future stock _price_ is close to impossible — markets are near-efficient and prices follow a roughly random walk. Volatility is different: it clusters (high volatility tends to follow high volatility) and mean-reverts, giving it genuine, learnable structure. This is also a real business problem — volatility forecasts feed directly into:
+Predicting future stock _price_ is close to impossible markets are near-efficient and prices follow a roughly random walk. Volatility is different: it clusters (high volatility tends to follow high volatility) and mean-reverts, giving it genuine, learnable structure. This is also a real business problem volatility forecasts feed directly into:
 
 - **Risk management** — Value-at-Risk (VaR) calculations for capital allocation
 - **Options pricing** — the only non-observable input in Black-Scholes-style pricing
@@ -50,9 +50,9 @@ stock-volatility-mlflow/
 │   ├── data_ingestion.py      # live OHLCV fetch via yfinance
 │   ├── feature_engineering.py # 50+ feature pipeline + target definition
 │   ├── baseline.py            # Dummy / Persistence / LinearRegression baselines
-│   ├── train.py                # 6 models, MLflow logging, model registry
-│   └── tune.py                  # RandomizedSearchCV + TimeSeriesSplit tuning
-├── main.py                     # runs the full pipeline end to end
+│   ├── train.py               # 6 models, MLflow logging, model registry
+│   └── tune.py                # RandomizedSearchCV + TimeSeriesSplit tuning
+├── main.py                    # runs the full pipeline end to end
 ├── requirements.txt
 └── README.md
 ```
@@ -155,13 +155,13 @@ A model that can't beat persistence hasn't learned anything beyond what's trivia
 
 ## Key finding
 
-Every regularized linear model outperformed every tuned tree ensemble — including XGBoost, LightGBM, and CatBoost after a full `RandomizedSearchCV` + `TimeSeriesSplit` search. This isn't an undertuned-tree artifact; the trees were given a fair, properly time-series-aware search and still lost.
+Every regularized linear model outperformed every tuned tree ensemble including XGBoost, LightGBM, and CatBoost after a full `RandomizedSearchCV` + `TimeSeriesSplit` search. This isn't an undertuned-tree artifact; the trees were given a fair, properly time-series-aware search and still lost.
 
-The most likely explanation: this dataset has a low signal-to-noise ratio (typical of financial forecasting — markets are close to efficient) and significant multicollinearity among the engineered features (several rolling-window features capture overlapping information). Tree ensembles have enough capacity to overfit that noise; regularized linear models, especially with the heavy shrinkage Ridge converged to (α=100 over the default α=1), generalize better by averaging across correlated, noisy signals instead of chasing them.
+The most likely explanation: this dataset has a low signal-to-noise ratio (typical of financial forecasting markets are close to efficient) and significant multicollinearity among the engineered features (several rolling-window features capture overlapping information). Tree ensembles have enough capacity to overfit that noise; regularized linear models, especially with the heavy shrinkage Ridge converged to (α=100 over the default α=1), generalize better by averaging across correlated, noisy signals instead of chasing them.
 
-**A secondary nuance worth noting:** Ridge won on the single held-out test period, but Lasso and ElasticNet had _better average cross-validation RMSE_ across the historical `TimeSeriesSplit` folds — which span more volatile periods (2020 COVID crash, 2022 rate hikes) than the calmer final test window. This suggests Lasso/ElasticNet may generalize more robustly across different market regimes, even though Ridge edged ahead on this specific test slice. Ridge was selected as champion for simplicity and its test-set edge, with this trade-off documented rather than ignored.
+**A secondary nuance worth noting:** Ridge won on the single held-out test period, but Lasso and ElasticNet had _better average cross-validation RMSE_ across the historical `TimeSeriesSplit` folds which span more volatile periods (2020 COVID crash, 2022 rate hikes) than the calmer final test window. This suggests Lasso/ElasticNet may generalize more robustly across different market regimes, even though Ridge edged ahead on this specific test slice. Ridge was selected as champion for simplicity and its test-set edge, with this trade-off documented rather than ignored.
 
-> **Context on R² ≈ 0.38:** This is a strong result for financial volatility forecasting, not a weak one. Published quantitative finance research typically reports R² in the 0.2–0.5 range for this kind of target — markets are close to efficient, so a fully predictable volatility signal would already be arbitraged away. An R² above 0.3 here represents a real, exploitable signal.
+> **Context on R² ≈ 0.38:** This is a strong result for financial volatility forecasting, not a weak one. Published quantitative finance research typically reports R² in the 0.2–0.5 range for this kind of target markets are close to efficient, so a fully predictable volatility signal would already be arbitraged away. An R² above 0.3 here represents a real, exploitable signal.
 
 ---
 
